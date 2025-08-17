@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ActivityIcon, Smile, Frown, Meh, Camera, Upload, X } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { ActivityIcon, Smile, Frown, Meh, Camera, Upload, X, Calendar, Clock } from "lucide-react"
 import CameraComponent from "@/components/custom/CameraComponent"
 import { FoodEntry } from "@/components/custom/DiaryEntry"
 import AppLayout from "@/components/custom/AppLayout"
@@ -30,6 +31,8 @@ export default function HomePage() {
   const [mood, setMood] = useState<"happy" | "neutral" | "sad">("neutral")
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showCamera, setShowCamera] = useState(false)
+  const [useManualDateTime, setUseManualDateTime] = useState(false)
+  const [manualDateTime, setManualDateTime] = useState("")
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -55,14 +58,22 @@ export default function HomePage() {
 
     if (!food.trim()) return
 
+    // Determine the date and time to use
+    let entryDate: Date
+    if (useManualDateTime && manualDateTime) {
+      entryDate = new Date(manualDateTime)
+    } else {
+      entryDate = new Date()
+    }
+
     const newEntry: FoodEntry = {
       id: Date.now().toString(),
       food: food.trim(),
-      time: new Date().toLocaleTimeString("es-ES", {
+      time: entryDate.toLocaleTimeString("es-ES", {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      date: new Date().toLocaleDateString("es-ES", {
+      date: entryDate.toLocaleDateString("es-ES", {
         weekday: "long",
         year: "numeric",
         month: "long",
@@ -85,6 +96,8 @@ export default function HomePage() {
     setNotes("")
     setMood("neutral")
     setSelectedImage(null)
+    setUseManualDateTime(false)
+    setManualDateTime("")
 
     // Show success message
     alert("¡Entrada guardada exitosamente!")
@@ -119,6 +132,68 @@ export default function HomePage() {
                 className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
                 required
               />
+            </div>
+
+            {/* Manual Date/Time Section */}
+            <div className="space-y-4 p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center justify-between">
+                <Label className="text-gray-200 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-orange-400" />
+                  Fecha y hora personalizada
+                </Label>
+                <Switch
+                  checked={useManualDateTime}
+                  onCheckedChange={setUseManualDateTime}
+                />
+              </div>
+              
+              {useManualDateTime && (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-400">
+                    Si no seleccionas una fecha y hora, se usará la fecha y hora actual
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="manual-date" className="text-xs text-gray-400 mb-1 block">
+                        Fecha
+                      </Label>
+                      <Input
+                        id="manual-date"
+                        type="date"
+                        value={manualDateTime ? manualDateTime.split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value
+                          const time = manualDateTime ? manualDateTime.split('T')[1] || '12:00' : '12:00'
+                          setManualDateTime(`${date}T${time}`)
+                        }}
+                        className="bg-gray-600 border-gray-500 text-white"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="manual-time" className="text-xs text-gray-400 mb-1 block">
+                        Hora
+                      </Label>
+                      <Input
+                        id="manual-time"
+                        type="time"
+                        value={manualDateTime ? manualDateTime.split('T')[1] || '12:00' : '12:00'}
+                        onChange={(e) => {
+                          const time = e.target.value
+                          const date = manualDateTime ? manualDateTime.split('T')[0] : new Date().toISOString().split('T')[0]
+                          setManualDateTime(`${date}T${time}`)
+                        }}
+                        className="bg-gray-600 border-gray-500 text-white"
+                      />
+                    </div>
+                  </div>
+                  {manualDateTime && (
+                    <div className="text-sm text-gray-300 bg-gray-600/50 p-2 rounded">
+                      <Clock className="w-4 h-4 inline mr-2 text-orange-400" />
+                      Entrada programada para: {new Date(manualDateTime).toLocaleString("es-ES")}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -169,39 +244,39 @@ export default function HomePage() {
               </div>
             </div>
 
-                          <div className="space-y-2">
-                <Label htmlFor="feeling" className="text-gray-200">
-                  ¿Cómo te sentiste después de comer?
-                </Label>
-                <Input
-                  id="feeling"
-                  value={feeling}
-                  onChange={(e) => setFeeling(e.target.value)}
-                  placeholder="ej., Me sentí satisfecho y con energía"
-                  className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="feeling" className="text-gray-200">
+                ¿Cómo te sentiste después de comer?
+              </Label>
+              <Input
+                id="feeling"
+                value={feeling}
+                onChange={(e) => setFeeling(e.target.value)}
+                placeholder="ej., Me sentí satisfecho y con energía"
+                className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label className="text-gray-200">¿Cómo te sentó?</Label>
-                <div className="flex gap-4">
-                  {(["happy", "neutral", "sad"] as const).map((moodOption) => (
-                    <button
-                      key={moodOption}
-                      type="button"
-                      onClick={() => setMood(moodOption)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                        mood === moodOption
-                          ? "bg-orange-500 text-white border-orange-500"
-                          : "bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
-                      }`}
-                    >
-                      {moodIcons[moodOption]}
-                      <span>{moodLabels[moodOption]}</span>
-                    </button>
-                  ))}
-                </div>
+            <div className="space-y-2">
+              <Label className="text-gray-200">¿Cómo te sentó?</Label>
+              <div className="flex gap-4">
+                {(["happy", "neutral", "sad"] as const).map((moodOption) => (
+                  <button
+                    key={moodOption}
+                    type="button"
+                    onClick={() => setMood(moodOption)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                      mood === moodOption
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
+                    }`}
+                  >
+                    {moodIcons[moodOption]}
+                    <span>{moodLabels[moodOption]}</span>
+                  </button>
+                ))}
               </div>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="text-gray-200">
