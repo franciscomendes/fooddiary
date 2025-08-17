@@ -6,20 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { CalendarDays, Clock, ActivityIcon, Heart, Smile, Frown, Meh, Camera, Upload, X } from "lucide-react"
+import { ActivityIcon, Smile, Frown, Meh, Camera, Upload, X } from "lucide-react"
 import CameraComponent from "@/components/custom/CameraComponent"
+import Diary from "@/components/custom/Diary"
+import { FoodEntry } from "@/components/custom/DiaryEntry"
 
-interface FoodEntry {
-  id: string
-  food: string
-  time: string
-  date: string
-  feeling: string
-  notes: string
-  mood: "happy" | "neutral" | "sad"
-  image?: string
-}
+
 
 const moodIcons = {
   happy: <Smile className="w-4 h-4 text-green-400" />,
@@ -217,103 +209,7 @@ export default function FoodDiaryApp() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white">Tu Diario de Comidas</h2>
-            {entries.length > 0 && (
-              <Badge variant="outline" className="text-sm border-gray-600 text-gray-300">
-                {entries.length} {entries.length === 1 ? "entrada" : "entradas"}
-              </Badge>
-            )}
-          </div>
-
-          {entries.length === 0 ? (
-            <Card className="bg-gray-800 border-gray-700">
-              <CardContent className="py-12 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center">
-                    <Heart className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="text-gray-300 text-lg font-medium mb-1">Aún no hay entradas</p>
-                    <p className="text-gray-400 text-sm">¡Comienza registrando tu primera comida arriba!</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {entries.map((entry) => (
-                <Card
-                  key={entry.id}
-                  className="bg-gray-800 border-gray-700 hover:shadow-lg hover:shadow-gray-900/50 transition-shadow"
-                >
-                  <CardContent className="p-0">
-                    {entry.image && (
-                      <div className="relative">
-                        <img
-                          src={entry.image || "/placeholder.svg"}
-                          alt={entry.food}
-                          className="w-full h-56 object-cover rounded-t-lg"
-                        />
-                        <div className="absolute top-3 right-3 bg-gray-900/90 backdrop-blur-sm rounded-full p-2">
-                          {moodIcons[entry.mood]}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-white mb-2 leading-tight">{entry.food}</h3>
-                          <div className="flex items-center gap-3 text-sm text-gray-400">
-                            <div className="flex items-center gap-1.5">
-                              <CalendarDays className="w-4 h-4" />
-                              <span>{entry.date}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
-                              <span>{entry.time}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {!entry.image && (
-                          <div className="flex items-center gap-1 bg-gray-700 rounded-full p-2">
-                            {moodIcons[entry.mood]}
-                          </div>
-                        )}
-                      </div>
-
-                      {entry.feeling && (
-                        <div className="mb-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                            <span className="text-sm font-medium text-gray-400">Cómo te sentiste</span>
-                          </div>
-                          <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 font-medium">
-                            {entry.feeling}
-                          </Badge>
-                        </div>
-                      )}
-
-                      {entry.notes && (
-                        <div className="mt-4 pt-4 border-t border-gray-700">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                            <span className="text-sm font-medium text-gray-400">Notas</span>
-                          </div>
-                          <p className="text-gray-200 text-sm leading-relaxed bg-gray-700/50 rounded-lg p-3">
-                            {entry.notes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+      <Diary entries={entries} />
       </div>
       {showCamera && (
         <CameraComponent
