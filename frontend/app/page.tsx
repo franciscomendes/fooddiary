@@ -169,26 +169,39 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-gray-200">¿Cómo te sentó?</Label>
-              <div className="flex gap-4">
-                {(["happy", "neutral", "sad"] as const).map((moodOption) => (
-                  <button
-                    key={moodOption}
-                    type="button"
-                    onClick={() => setMood(moodOption)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                      mood === moodOption
-                        ? "bg-orange-500 text-white border-orange-500"
-                        : "bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
-                    }`}
-                  >
-                    {moodIcons[moodOption]}
-                    <span>{moodLabels[moodOption]}</span>
-                  </button>
-                ))}
+                          <div className="space-y-2">
+                <Label htmlFor="feeling" className="text-gray-200">
+                  ¿Cómo te sentiste después de comer?
+                </Label>
+                <Input
+                  id="feeling"
+                  value={feeling}
+                  onChange={(e) => setFeeling(e.target.value)}
+                  placeholder="ej., Me sentí satisfecho y con energía"
+                  className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
+                />
               </div>
-            </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-200">¿Cómo te sentó?</Label>
+                <div className="flex gap-4">
+                  {(["happy", "neutral", "sad"] as const).map((moodOption) => (
+                    <button
+                      key={moodOption}
+                      type="button"
+                      onClick={() => setMood(moodOption)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                        mood === moodOption
+                          ? "bg-orange-500 text-white border-orange-500"
+                          : "bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
+                      }`}
+                    >
+                      {moodIcons[moodOption]}
+                      <span>{moodLabels[moodOption]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="text-gray-200">
