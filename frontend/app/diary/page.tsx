@@ -9,6 +9,34 @@ import { Trash2, Calendar, Clock, Smile, Frown, Meh, Search, Filter, X } from "l
 import { FoodEntry } from "@/components/custom/DiaryEntry"
 import AppLayout from "@/components/custom/AppLayout"
 
+// Helper function to parse Spanish formatted dates
+const parseSpanishDate = (dateString: string): Date | null => {
+  try {
+    // Handle Spanish date format: "lunes, 1 de enero de 2024"
+    const months: { [key: string]: number } = {
+      'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
+      'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
+    }
+    
+    // Extract day, month, and year from the Spanish string
+    const match = dateString.match(/(\d+)\s+de\s+(\w+)\s+de\s+(\d+)/)
+    if (match) {
+      const day = parseInt(match[1])
+      const monthName = match[2].toLowerCase()
+      const year = parseInt(match[3])
+      
+      if (months[monthName] !== undefined) {
+        return new Date(year, months[monthName], day)
+      }
+    }
+    
+    // Fallback to standard Date parsing
+    return new Date(dateString)
+  } catch (error) {
+    return null
+  }
+}
+
 const moodIcons = {
   happy: <Smile className="w-4 h-4 text-green-400" />,
   neutral: <Meh className="w-4 h-4 text-yellow-400" />,
@@ -27,6 +55,8 @@ export default function DiaryPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMood, setSelectedMood] = useState<string>("all")
   const [selectedDate, setSelectedDate] = useState<string>("")
+  const [selectedDateRange, setSelectedDateRange] = useState<{start: string, end: string}>({start: "", end: ""})
+  const [dateFilterType, setDateFilterType] = useState<"single" | "range">("single")
   const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
@@ -56,16 +86,42 @@ export default function DiaryPage() {
     }
 
     // Filter by date
-    if (selectedDate) {
+    if (dateFilterType === "single" && selectedDate) {
       filtered = filtered.filter(entry => {
-        const entryDate = new Date(entry.date)
+        const entryDate = parseSpanishDate(entry.date)
         const filterDate = new Date(selectedDate)
-        return entryDate.toDateString() === filterDate.toDateString()
+        
+        if (entryDate && filterDate) {
+          // Compare dates by converting to date strings (ignoring time)
+          return entryDate.toDateString() === filterDate.toDateString()
+        }
+        return false
       })
+    } else if (dateFilterType === "range" && selectedDateRange.start && selectedDateRange.end) {
+      const startDate = new Date(selectedDateRange.start)
+      const endDate = new Date(selectedDateRange.end)
+      
+      // If start date is after end date, show no entries
+      if (startDate > endDate) {
+        filtered = []
+      } else {
+        // Apply date range filter
+        filtered = filtered.filter(entry => {
+          const entryDate = parseSpanishDate(entry.date)
+          
+          if (entryDate) {
+            // Set end date to end of day for inclusive range
+            const endOfDay = new Date(endDate)
+            endOfDay.setHours(23, 59, 59, 999)
+            return entryDate >= startDate && entryDate <= endOfDay
+          }
+          return false
+        })
+      }
     }
 
     setFilteredEntries(filtered)
-  }, [entries, searchTerm, selectedMood, selectedDate])
+  }, [entries, searchTerm, selectedMood, selectedDate, selectedDateRange, dateFilterType])
 
   const deleteEntry = (id: string) => {
     const updatedEntries = entries.filter(entry => entry.id !== id)
@@ -84,9 +140,19 @@ export default function DiaryPage() {
     setSearchTerm("")
     setSelectedMood("all")
     setSelectedDate("")
+    setSelectedDateRange({start: "", end: ""})
+    setDateFilterType("single")
   }
 
-  const hasActiveFilters = searchTerm || selectedMood !== "all" || selectedDate
+  const clearDateFilter = () => {
+    if (dateFilterType === "single") {
+      setSelectedDate("")
+    } else {
+      setSelectedDateRange({start: "", end: ""})
+    }
+  }
+
+  const hasActiveFilters = searchTerm || selectedMood !== "all" || selectedDate || (dateFilterType === "range" && (selectedDateRange.start || selectedDateRange.end))
 
   if (entries.length === 0) {
     return (
@@ -196,14 +262,75 @@ export default function DiaryPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Fecha específica
+                    Tipo de filtro de fecha
                   </label>
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white"
-                  />
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFilterType("single")
+                        // Reset the other filter type
+                        setSelectedDateRange({start: "", end: ""})
+                      }}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                        dateFilterType === "single"
+                          ? "bg-orange-500 text-white border-orange-500"
+                          : "bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
+                      }`}
+                    >
+                      Fecha única
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFilterType("range")
+                        // Reset the other filter type
+                        setSelectedDate("")
+                      }}
+                      className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                        dateFilterType === "range"
+                          ? "bg-orange-500 text-white border-orange-500"
+                          : "bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-200"
+                      }`}
+                    >
+                      Rango de fechas
+                    </button>
+                  </div>
+                  
+                  {dateFilterType === "single" ? (
+                    <Input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Desde:</label>
+                        <Input
+                          type="date"
+                          value={selectedDateRange.start}
+                          onChange={(e) => setSelectedDateRange(prev => ({...prev, start: e.target.value}))}
+                          className="bg-gray-700 border-gray-600 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Hasta:</label>
+                        <Input
+                          type="date"
+                          value={selectedDateRange.end}
+                          onChange={(e) => setSelectedDateRange(prev => ({...prev, end: e.target.value}))}
+                          className="bg-gray-700 border-gray-600 text-white"
+                        />
+                      </div>
+                      {selectedDateRange.start && selectedDateRange.end && new Date(selectedDateRange.start) > new Date(selectedDateRange.end) && (
+                        <p className="text-red-400 text-xs">
+                          ⚠️ La fecha de inicio es posterior a la fecha final. No se mostrarán entradas.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -233,11 +360,22 @@ export default function DiaryPage() {
                       </button>
                     </span>
                   )}
-                  {selectedDate && (
+                  {dateFilterType === "single" && selectedDate && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-500/30">
                       Fecha: {new Date(selectedDate).toLocaleDateString("es-ES")}
                       <button
                         onClick={() => setSelectedDate("")}
+                        className="ml-1 hover:text-green-200"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
+                  {dateFilterType === "range" && selectedDateRange.start && selectedDateRange.end && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-500/30">
+                      Rango: {new Date(selectedDateRange.start).toLocaleDateString("es-ES")} - {new Date(selectedDateRange.end).toLocaleDateString("es-ES")}
+                      <button
+                        onClick={() => setSelectedDateRange({start: "", end: ""})}
                         className="ml-1 hover:text-green-200"
                       >
                         <X className="w-3 h-3" />
