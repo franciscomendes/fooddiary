@@ -206,7 +206,7 @@ export default function CameraComponent({ onCapture, onClose }: { onCapture: (im
             <Button
               onClick={onClose}
               variant="outline"
-              className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="flex-1 border-gray-600 text-black-300 hover:bg-gray-700"
             >
               Cancelar
             </Button>
