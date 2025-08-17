@@ -9,6 +9,7 @@
 
 # Next.js
 /out/
+/.next
 
 # Production
 /build
