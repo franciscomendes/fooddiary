@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -33,6 +33,26 @@ export default function HomePage() {
   const [showCamera, setShowCamera] = useState(false)
   const [useManualDateTime, setUseManualDateTime] = useState(false)
   const [manualDateTime, setManualDateTime] = useState("")
+  const [isCameraPermissionGranted, setIsCameraPermissionGranted] = useState(false)
+  useEffect(() => {
+    const checkCameraPermission = async () => {
+      try {
+          if (navigator.mediaDevices) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+            stream.getTracks().forEach(track => track.stop())
+            setIsCameraPermissionGranted(true)
+        }
+        else {
+          setIsCameraPermissionGranted(false)
+        }
+      }
+      catch (error) {
+        console.error('Error checking camera permission:', error)
+        setIsCameraPermissionGranted(false)
+      }
+    }
+    checkCameraPermission()
+}, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -219,8 +239,15 @@ export default function HomePage() {
                 ) : (
                   <div className="flex gap-2">
                     <Label
-                      onClick={() => setShowCamera(true)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        if (isCameraPermissionGranted) setShowCamera(true)
+                      }}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-600 rounded-lg transition-colors ${
+                        isCameraPermissionGranted
+                          ? "cursor-pointer hover:bg-gray-700"
+                          : "cursor-not-allowed opacity-50"
+                      }`}
+                      aria-disabled={!isCameraPermissionGranted}
                     >
                       <Camera className="w-5 h-5 text-gray-400" />
                       <span className="text-gray-300">Tomar Foto</span>
