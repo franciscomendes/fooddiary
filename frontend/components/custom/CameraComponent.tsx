@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Camera } from 'lucide-react'
+import { useVideoDevices } from '@/hooks/use-video-devices'
 
 export default function CameraComponent({ onCapture, onClose }: { onCapture: (imageData: string) => void; onClose: () => void }) {
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -11,12 +12,8 @@ export default function CameraComponent({ onCapture, onClose }: { onCapture: (im
     const [isCameraActive, setIsCameraActive] = useState(false)
     const [deviceId, setDeviceId] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
-    const [videoDevices, setVideoDevices] = useState<{ deviceId: string, label: string }[]>([])
-    useEffect(() => {
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-            setVideoDevices(devices.filter((device) => device.kind === 'videoinput').map((device) => ({ deviceId: device.deviceId, label: device.label })))
-        })
-    }, [])
+    const [isCameraPermissionGranted, setIsCameraPermissionGranted] = useState(false)
+    const videoDevices = useVideoDevices()
 
     const startCamera = useCallback(async (selectedDeviceId?: string) => {
       try {
