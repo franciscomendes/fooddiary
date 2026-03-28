@@ -1,89 +1,106 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { ActivityIcon, Smile, Frown, Meh, Camera, Upload, X, Calendar, Clock } from "lucide-react"
-import CameraComponent from "@/components/custom/CameraComponent"
-import { FoodEntry } from "@/components/custom/DiaryEntry"
-import AppLayout from "@/components/custom/AppLayout"
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  ActivityIcon,
+  Smile,
+  Frown,
+  Meh,
+  Camera,
+  Upload,
+  X,
+  Calendar,
+  Clock,
+} from "lucide-react";
+import CameraComponent from "@/components/custom/CameraComponent";
+import { FoodEntry } from "@/components/custom/DiaryEntry";
+import AppLayout from "@/components/custom/AppLayout";
 
 const moodIcons = {
   happy: <Smile className="w-4 h-4 text-green-400" />,
   neutral: <Meh className="w-4 h-4 text-yellow-400" />,
   sad: <Frown className="w-4 h-4 text-red-400" />,
-}
+};
 
 const moodLabels = {
   happy: "Bien",
   neutral: "Regular",
   sad: "Mal",
-}
+};
 
 export default function HomePage() {
-  const [food, setFood] = useState("")
-  const [feeling, setFeeling] = useState("")
-  const [notes, setNotes] = useState("")
-  const [mood, setMood] = useState<"happy" | "neutral" | "sad">("neutral")
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [showCamera, setShowCamera] = useState(false)
-  const [useManualDateTime, setUseManualDateTime] = useState(false)
-  const [manualDateTime, setManualDateTime] = useState("")
-  const [isCameraPermissionGranted, setIsCameraPermissionGranted] = useState(false)
+  const [food, setFood] = useState("");
+  const [feeling, setFeeling] = useState("");
+  const [notes, setNotes] = useState("");
+  const [mood, setMood] = useState<"happy" | "neutral" | "sad">("neutral");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [useManualDateTime, setUseManualDateTime] = useState(false);
+  const [manualDateTime, setManualDateTime] = useState("");
+  const [isCameraPermissionGranted, setIsCameraPermissionGranted] =
+    useState(false);
   useEffect(() => {
     const checkCameraPermission = async () => {
       try {
-          if (navigator.mediaDevices) {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-            stream.getTracks().forEach(track => track.stop())
-            setIsCameraPermissionGranted(true)
+        if (navigator.mediaDevices) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          stream.getTracks().forEach((track) => track.stop());
+          setIsCameraPermissionGranted(true);
+        } else {
+          setIsCameraPermissionGranted(false);
         }
-        else {
-          setIsCameraPermissionGranted(false)
-        }
+      } catch (error) {
+        console.error("Error checking camera permission:", error);
+        setIsCameraPermissionGranted(false);
       }
-      catch (error) {
-        console.error('Error checking camera permission:', error)
-        setIsCameraPermissionGranted(false)
-      }
-    }
-    checkCameraPermission()
-}, [])
+    };
+    checkCameraPermission();
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (event) => {
-        setSelectedImage(event.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+        setSelectedImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleCameraCapture = (imageData: string) => {
-    setSelectedImage(imageData)
-  }
+    setSelectedImage(imageData);
+  };
 
   const removeImage = () => {
-    setSelectedImage(null)
-  }
+    setSelectedImage(null);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!food.trim()) return
+    if (!food.trim()) return;
 
     // Determine the date and time to use
-    let entryDate: Date
+    let entryDate: Date;
     if (useManualDateTime && manualDateTime) {
-      entryDate = new Date(manualDateTime)
+      entryDate = new Date(manualDateTime);
     } else {
-      entryDate = new Date()
+      entryDate = new Date();
     }
 
     const newEntry: FoodEntry = {
@@ -103,31 +120,37 @@ export default function HomePage() {
       notes: notes.trim(),
       mood,
       image: selectedImage || undefined,
-    }
+    };
 
     // Store in localStorage for now (in a real app, this would go to a database)
-    const existingEntries = JSON.parse(localStorage.getItem("foodEntries") || "[]")
-    const updatedEntries = [newEntry, ...existingEntries]
-    localStorage.setItem("foodEntries", JSON.stringify(updatedEntries))
+    const existingEntries = JSON.parse(
+      localStorage.getItem("foodEntries") || "[]"
+    );
+    const updatedEntries = [newEntry, ...existingEntries];
+    localStorage.setItem("foodEntries", JSON.stringify(updatedEntries));
 
     // Reset form
-    setFood("")
-    setFeeling("")
-    setNotes("")
-    setMood("neutral")
-    setSelectedImage(null)
-    setUseManualDateTime(false)
-    setManualDateTime("")
+    setFood("");
+    setFeeling("");
+    setNotes("");
+    setMood("neutral");
+    setSelectedImage(null);
+    setUseManualDateTime(false);
+    setManualDateTime("");
 
     // Show success message
-    alert("¡Entrada guardada exitosamente!")
-  }
+    alert("¡Entrada guardada exitosamente!");
+  };
 
   return (
     <AppLayout>
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">Registra tu Comida</h1>
-        <p className="text-gray-300 text-lg">Anota lo que comiste y cómo te hizo sentir</p>
+        <h1 className="text-4xl font-bold text-white mb-2">
+          Registra tu Comida
+        </h1>
+        <p className="text-gray-300 text-lg">
+          Anota lo que comiste y cómo te hizo sentir
+        </p>
       </div>
 
       <Card className="mb-8 bg-gray-800 border-gray-700">
@@ -136,7 +159,9 @@ export default function HomePage() {
             <ActivityIcon className="w-5 h-5 text-orange-400" />
             Nueva Entrada
           </CardTitle>
-          <CardDescription className="text-gray-300">Completa el formulario para registrar tu comida</CardDescription>
+          <CardDescription className="text-gray-300">
+            Completa el formulario para registrar tu comida
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -166,41 +191,58 @@ export default function HomePage() {
                   onCheckedChange={setUseManualDateTime}
                 />
               </div>
-              
+
               {useManualDateTime && (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-400">
-                    Si no seleccionas una fecha y hora, se usará la fecha y hora actual
+                    Si no seleccionas una fecha y hora, se usará la fecha y hora
+                    actual
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="manual-date" className="text-xs text-gray-400 mb-1 block">
+                      <Label
+                        htmlFor="manual-date"
+                        className="text-xs text-gray-400 mb-1 block"
+                      >
                         Fecha
                       </Label>
                       <Input
                         id="manual-date"
                         type="date"
-                        value={manualDateTime ? manualDateTime.split('T')[0] : ''}
+                        value={
+                          manualDateTime ? manualDateTime.split("T")[0] : ""
+                        }
                         onChange={(e) => {
-                          const date = e.target.value
-                          const time = manualDateTime ? manualDateTime.split('T')[1] || '12:00' : '12:00'
-                          setManualDateTime(`${date}T${time}`)
+                          const date = e.target.value;
+                          const time = manualDateTime
+                            ? manualDateTime.split("T")[1] || "12:00"
+                            : "12:00";
+                          setManualDateTime(`${date}T${time}`);
                         }}
                         className="bg-gray-600 border-gray-500 text-white"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="manual-time" className="text-xs text-gray-400 mb-1 block">
+                      <Label
+                        htmlFor="manual-time"
+                        className="text-xs text-gray-400 mb-1 block"
+                      >
                         Hora
                       </Label>
                       <Input
                         id="manual-time"
                         type="time"
-                        value={manualDateTime ? manualDateTime.split('T')[1] || '12:00' : '12:00'}
+                        value={
+                          manualDateTime
+                            ? manualDateTime.split("T")[1] || "12:00"
+                            : "12:00"
+                        }
                         onChange={(e) => {
-                          const time = e.target.value
-                          const date = manualDateTime ? manualDateTime.split('T')[0] : new Date().toISOString().split('T')[0]
-                          setManualDateTime(`${date}T${time}`)
+                          const time = e.target.value;
+                          const date = manualDateTime
+                            ? manualDateTime.split("T")[0]
+                            : new Date().toISOString().split("T")[0];
+                          setManualDateTime(`${date}T${time}`);
                         }}
                         className="bg-gray-600 border-gray-500 text-white"
                       />
@@ -209,7 +251,8 @@ export default function HomePage() {
                   {manualDateTime && (
                     <div className="text-sm text-gray-300 bg-gray-600/50 p-2 rounded">
                       <Clock className="w-4 h-4 inline mr-2 text-orange-400" />
-                      Entrada programada para: {new Date(manualDateTime).toLocaleString("es-ES")}
+                      Entrada programada para:{" "}
+                      {new Date(manualDateTime).toLocaleString("es-ES")}
                     </div>
                   )}
                 </div>
@@ -217,7 +260,9 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-gray-200">Foto de la comida (opcional)</Label>
+              <Label className="text-gray-200">
+                Foto de la comida (opcional)
+              </Label>
               <div className="space-y-4">
                 {selectedImage ? (
                   <div className="relative">
@@ -240,7 +285,7 @@ export default function HomePage() {
                   <div className="flex gap-2">
                     <Label
                       onClick={() => {
-                        if (isCameraPermissionGranted) setShowCamera(true)
+                        if (isCameraPermissionGranted) setShowCamera(true);
                       }}
                       className={`flex-1 flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-600 rounded-lg transition-colors ${
                         isCameraPermissionGranted
@@ -318,7 +363,10 @@ export default function HomePage() {
               />
             </div>
 
-            <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+            <Button
+              type="submit"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            >
               Guardar Entrada
             </Button>
           </form>
@@ -332,5 +380,5 @@ export default function HomePage() {
         />
       )}
     </AppLayout>
-  )
+  );
 }
